@@ -31,7 +31,7 @@ func main() {
 
 	b2.ListBuckets(ctx)
 
-	for range time.Tick(time.Hour * 6) {
+	for range time.Tick(time.Hour * 2) {
 		go func() {
 			fmt.Println("Running backup...")
 			runBackup()
@@ -41,11 +41,13 @@ func main() {
 }
 
 func runBackup() {
+	currentTime := time.Now()
+	ct := currentTime.Format("01-02-2006-15-00")
 	ctx := context.Background()
 	host := os.Getenv("MYSQL_DATABASE_HOST")
 	password := os.Getenv("MYSQL_PASSWORD")
 
-	cmd := exec.Command("mysqldump -h " + host + " -u root -p" + password + " --all-databases > /tmp/sql-backup.sql")
+	cmd := exec.Command("mysqldump -h " + host + " -u root -p" + password + " --all-databases > /tmp/sql-backup-" + ct + ".sql")
 
 	err := cmd.Run()
 
@@ -54,7 +56,7 @@ func runBackup() {
 	} else {
 		copyFile(ctx, &b2.Bucket{}, "/tmp/sql-backup.sql", "./mysql-backup-docker/")
 		fmt.Println("Backup completed...")
-		cmd := exec.Command("rm -rf /tmp/sql-backup.sql")
+		cmd := exec.Command("rm -rf /tmp/sql-backup*")
 		err := cmd.Run()
 		if err != nil {
 			log.Fatal(err)
