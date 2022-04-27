@@ -45,7 +45,7 @@ func runBackup() {
 	host := os.Getenv("MYSQL_DATABASE_HOST")
 	password := os.Getenv("MYSQL_PASSWORD")
 
-	cmd := exec.Command("mysqldump -h " + host + " -u root -p " + password + " > /tmp/sql-backup.sql")
+	cmd := exec.Command("mysqldump -h " + host + " -u root -p" + password + " --all-databases > /tmp/sql-backup.sql")
 
 	err := cmd.Run()
 
@@ -54,6 +54,11 @@ func runBackup() {
 	} else {
 		copyFile(ctx, &b2.Bucket{}, "/tmp/sql-backup.sql", "./mysql-backup-docker/")
 		fmt.Println("Backup completed...")
+		cmd := exec.Command("rm -rf /tmp/sql-backup.sql")
+		err := cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
