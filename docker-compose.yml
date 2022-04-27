@@ -3,17 +3,7 @@ version: "3.7"
 services:
   mysql-backup:
     image: mysql-backup
-    deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        delay: 5s
-        order: start-first
-      restart_policy:
-        condition: any
-        delay: 10s
-        max_attempts: 10
-        window: 15s
+    restart: always
     networks:
       - dbnet
 
