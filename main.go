@@ -11,21 +11,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/joho/godotenv"
 )
 
+var colorReset = "\033[0m"
+var colorRed = "\033[31m"
+var colorGreen = "\033[32m"
+var colorCyan = "\033[36m"
+
+var cTime = time.Now()
+var curTime = cTime.Format("01-02-2006-15-04")
+
 func main() {
-	fmt.Println("Backup service running...")
+
+	fmt.Println(string(colorCyan), curTime+" Backup service running...", string(colorReset))
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal(string(colorRed), curTime+" Error loading .env file", string(colorReset))
 	}
 
 	for range time.Tick(time.Minute * 30) {
 		go func() {
-			fmt.Println("Running backup...")
+			fmt.Println(string(colorGreen), curTime+" Running backup...", string(colorReset))
 			runBackup()
 		}()
 	}
@@ -47,7 +56,7 @@ func runBackup() {
 		fmt.Println(err)
 	} else {
 		copyFile("/tmp/" + fileName)
-		fmt.Println("Backup completed...")
+		fmt.Println(string(colorGreen), curTime+" Backup completed...", string(colorReset))
 		time.Sleep(time.Second * 10)
 		cmd := exec.Command("rm", "-rf", "/tmp/sql-backup*")
 		err := cmd.Run()
@@ -68,18 +77,22 @@ func copyFile(src string) {
 		Region:           aws.String("us-west-000"),
 		S3ForcePathStyle: aws.Bool(true),
 	}
-	newSession := session.New(s3Config)
 
-	s3Client := s3.New(newSession)
+	sess, err := session.NewSession(s3Config)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	_, err := s3Client.PutObject(&s3.PutObjectInput{
-		Body:   strings.NewReader("S3 Compatible API"),
+	uploader := s3manager.NewUploader(sess)
+
+	_, err = uploader.Upload(&s3manager.UploadInput{
 		Bucket: bucket,
 		Key:    key,
+		Body:   strings.NewReader("S3 Compatible API"),
 	})
 	if err != nil {
-		fmt.Printf("Failed to upload object %s/%s, %s\n", *bucket, *key, err.Error())
+		fmt.Printf(curTime+" Failed to upload object %s/%s, %s\n", *bucket, *key, err.Error())
 	} else {
-		fmt.Printf("Successfully uploaded key %s\n", *key)
+		fmt.Printf(curTime+" Successfully uploaded backup %s\n", *key)
 	}
 }
