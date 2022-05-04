@@ -20,10 +20,10 @@ var colorRed = "\033[31m"
 var colorGreen = "\033[32m"
 var colorCyan = "\033[36m"
 
-var cTime = time.Now()
-var curTime = cTime.Format("01-02-2006-15-04")
-
 func main() {
+
+	cTime := time.Now()
+	curTime := cTime.Format("01-02-2006-15-04")
 
 	fmt.Println(string(colorCyan), curTime+" Backup service running...", string(colorReset))
 
@@ -56,7 +56,7 @@ func runBackup() {
 		fmt.Println(err)
 	} else {
 		copyFile("/tmp/" + fileName)
-		fmt.Println(string(colorGreen), curTime+" Backup completed...", string(colorReset))
+		fmt.Println(string(colorGreen), ct+" Backup completed...", string(colorReset))
 		time.Sleep(time.Second * 10)
 		cmd := exec.Command("rm", "-rf", "/tmp/sql-backup*")
 		err := cmd.Run()
@@ -68,6 +68,10 @@ func runBackup() {
 }
 
 func copyFile(src string) {
+
+	cTime := time.Now()
+	curTime := cTime.Format("01-02-2006-15-04")
+
 	bucket := aws.String(os.Getenv("BUCKET"))
 	key := aws.String(src)
 
